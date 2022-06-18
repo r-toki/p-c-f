@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { Activity } from '../types';
+import { Activity } from '@/types';
 
 const BASE_URL = 'https://fakerestapi.azurewebsites.net';
 
