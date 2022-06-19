@@ -80,7 +80,6 @@ const PostItem: FC<PostItemProps> = ({ post, onToggleFavorite }) => {
         padding: '16px',
       }}
     >
-      {/* TODO: Icon 追加 */}
       <div
         style={{
           height: '48px',
