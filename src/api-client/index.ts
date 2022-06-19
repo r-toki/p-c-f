@@ -1,19 +1,12 @@
 import axios from 'axios';
 
-import { Activity } from '@/types';
-
-const BASE_URL = 'https://fakerestapi.azurewebsites.net';
+const BASE_URL = ' https://asia-northeast1-praha-test.cloudfunctions.net';
 
 axios.defaults.baseURL = BASE_URL;
 
-export const getActivities = () => axios.get('/api/v1/Activities');
+export const getPosts = () => axios.get('/getPosts');
 
-export const postActivities = (data: Activity) => axios.post('/api/v1/Activities', data);
+export const createPost = (body: { title: string; body: string }) =>
+  axios.post('/createPost', body);
 
-export const getActivity = (id: number) => axios.get(`/api/v1/Activities/${id}`);
-
-export const putActivity = (id: number, data: Activity) =>
-  axios.put(`/api/v1/Activities/${id}`, data);
-
-// NOTE: res.data は空文字？
-export const deleteActivity = (id: number) => axios.delete(`/api/v1/Activities/${id}`);
+export const toggleFavorite = (body: { id: number }) => axios.post('/favorites', body);
