@@ -3,23 +3,30 @@ import './App.css';
 import { format } from 'date-fns';
 import { FC, FormEventHandler, useEffect, useMemo, useState } from 'react';
 
-import { createPost, getPosts, toggleFavorite } from './api-client';
+import * as api from './api-client';
 import { Post } from './types';
 
-const PostCreateForm: FC = () => {
+type PostCreateFormProps = {
+  onSubmit: ({ title, body }: { title: string; body: string }) => Promise<void>;
+};
+
+const PostCreateForm: FC<PostCreateFormProps> = ({ onSubmit }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
-  const onSubmit: FormEventHandler = async (e) => {
+  const handleSubmit: FormEventHandler = async (e) => {
     e.preventDefault();
-    await createPost({ title, body });
+    await onSubmit({ title, body });
     setTitle('');
     setBody('');
   };
 
   return (
     <div style={{ border: 'solid 1px', borderRadius: '4px', padding: '16px' }}>
-      <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+      >
         <div>
           <label>タイトル</label>
           <input
@@ -52,19 +59,16 @@ const PostCreateForm: FC = () => {
 
 type PostItemProps = {
   post: Post;
+  onToggleFavorite: () => Promise<void>;
 };
 
-const PostItem: FC<PostItemProps> = ({ post }) => {
+const PostItem: FC<PostItemProps> = ({ post, onToggleFavorite }) => {
   const initial = useMemo(() => {
     const names = post.createdBy.split(' ');
     const first = names.at(0) || '';
     const last = names.at(-1) || '';
     return first[0] + '.' + last[0];
   }, [post]);
-
-  const onToggleFavorite = async () => {
-    await toggleFavorite({ id: post.id });
-  };
 
   return (
     <div
@@ -110,12 +114,35 @@ const PostItem: FC<PostItemProps> = ({ post }) => {
   );
 };
 
-export const App: FC = () => {
+const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
 
+  const fetchPosts = async () => {
+    await api.getPosts().then((res) => setPosts(res.data.data));
+  };
+
   useEffect(() => {
-    getPosts().then((res) => setPosts(res.data.data));
+    fetchPosts();
   }, []);
+
+  const createPost = async ({ title, body }: { title: string; body: string }) => {
+    await api.createPost({ title, body });
+    await fetchPosts();
+  };
+
+  const toggleFavoritePost = async (id: number) => {
+    await api.toggleFavorite({ id });
+  };
+
+  return {
+    posts,
+    createPost,
+    toggleFavoritePost,
+  };
+};
+
+export const App: FC = () => {
+  const { posts, createPost, toggleFavoritePost } = usePosts();
 
   return (
     <div
@@ -128,11 +155,11 @@ export const App: FC = () => {
         gap: '16px',
       }}
     >
-      <PostCreateForm />
+      <PostCreateForm onSubmit={createPost} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {posts.map((p) => (
-          <PostItem key={p.id} post={p} />
+          <PostItem key={p.id} post={p} onToggleFavorite={() => toggleFavoritePost(p.id)} />
         ))}
       </div>
     </div>
